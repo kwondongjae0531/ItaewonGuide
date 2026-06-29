@@ -6,6 +6,7 @@
     <title>Global Itaewon | 글로벌 이태원 가이드</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body>
 
@@ -30,7 +31,6 @@
         </div>
     </section>
 
-    <!-- Dining Section -->
     <section id="dining" class="container">
         <h2 class="section-title">World Flavors <br> <small>글로벌 맛집 탐방</small></h2>
         <div class="card-grid">
@@ -79,7 +79,6 @@
         </div>
     </section>
 
-    <!-- Sights Section -->
     <section id="sights" class="container bg-light">
         <h2 class="section-title">Must-Visit Sights <br> <small>추천 명소</small></h2>
         <div class="card-grid">
@@ -128,7 +127,6 @@
         </div>
     </section>
 
-    <!-- Nightlife & Culture Section -->
     <section id="nightlife" class="container">
         <h2 class="section-title">Nightlife & Culture <br> <small>이태원의 역동적인 밤</small></h2>
         <div class="card-grid">
@@ -156,7 +154,6 @@
         </div>
     </section>
 
-    <!-- Traveler's Tips Section -->
     <section id="tips" class="container bg-light">
         <h2 class="section-title">Traveler's Tips <br> <small>이태원 여행 꿀팁</small></h2>
         <div class="card-grid">
@@ -188,13 +185,26 @@
                     <p>Stay connected with "Public WiFi Secure." <br><br> 거리 곳곳의 공공 와이파이를 이용해 보세요.</p>
                 </div>
             </div>
+            
             <div class="card tip-card">
                 <div class="card-info">
                     <div class="tip-icon">💵</div>
-                    <h3>Exchange</h3>
-                    <p>Currency exchange booths near Exit 1. <br><br> 1번 출구 근처에 사설 환전소가 많습니다.</p>
+                    <h3>Exchange & Calc</h3>
+                    <p>Check real-time exchange rates easily. <br><br> 실시간 환율을 쉽고 빠르게 계산해 보세요.</p>
+                    
+                    <div class="exchange-calc">
+                        <input type="number" id="krw-input" placeholder="원화(KRW) 금액 입력" min="0">
+                        <select id="currency-select">
+                            <option value="USD">미국 달러 (USD)</option>
+                            <option value="EUR">유럽 유로 (EUR)</option>
+                            <option value="JPY">일본 엔 (JPY)</option>
+                            <option value="CNY">중국 위안 (CNY)</option>
+                        </select>
+                        <div class="calc-result" id="calc-result">금액을 입력하시면 환산됩니다.</div>
+                    </div>
                 </div>
             </div>
+
             <div class="card tip-card">
                 <div class="card-info">
                     <div class="tip-icon">🛍️</div>
@@ -205,10 +215,196 @@
         </div>
     </section>
 
+    <section id="guestbook" class="container bg-light">
+        <h2 class="section-title">Visitor Reviews <br> <small>이태원 방문자 방명록</small></h2>
+        <div class="guestbook-wrapper">
+            <form id="review-form">
+                <input type="text" id="reviewer-name" placeholder="이름을 입력하세요 (Name)" required>
+                <textarea id="reviewer-msg" placeholder="이태원의 어떤 점이 좋으셨나요? (Leave a message)" required></textarea>
+                <button type="submit" class="btn" id="submit-review">방명록 남기기</button>
+            </form>
+            <div id="reviews-list">
+                </div>
+        </div>
+    </section>
     <footer>
         <p>&copy; 2026 Global Itaewon Project. Created by <strong>Kwon Dongjae</strong></p>
         <p>Artificial Intelligence Software Department</p>
     </footer>
 
+    <div id="image-modal" class="modal">
+        <span class="close-btn">&times;</span>
+        <img class="modal-content" id="modal-img">
+    </div>
+
+    <script>
+        // 1. 메인 화면 타이핑(Typing) 효과 기능
+        const heroTitle = document.querySelector('.hero h1');
+        const textEn = "Experience the World in Seoul";
+        const textKo = "서울 속의 세계, 이태원을 만나보세요";
+        
+        heroTitle.innerHTML = ''; 
+
+        let indexEn = 0;
+        let indexKo = 0;
+
+        function typeWriter() {
+            if (indexEn < textEn.length) {
+                // 영문 타이핑
+                heroTitle.innerHTML += textEn.charAt(indexEn);
+                indexEn++;
+                setTimeout(typeWriter, 50); 
+                
+            } else if (indexEn === textEn.length) {
+                // 줄바꿈 및 한글 <span> 준비
+                heroTitle.innerHTML += "<br><span></span>";
+                indexEn++;
+                setTimeout(typeWriter, 400); 
+                
+            } else if (indexKo < textKo.length) {
+                // 한글 타이핑
+                const spanElement = heroTitle.querySelector('span');
+                spanElement.innerHTML += textKo.charAt(indexKo);
+                indexKo++;
+                setTimeout(typeWriter, 60); 
+                
+            } else {
+                // 타이핑이 모두 끝나면 커서(빨간 줄) 숨기기
+                heroTitle.classList.add('typing-done');
+            }
+        }
+
+        setTimeout(typeWriter, 500);
+
+        // 2. 실시간 환율 계산기 기능
+        const exchangeRates = {
+            USD: 0.00072,  
+            EUR: 0.00067,  
+            JPY: 0.11,     
+            CNY: 0.0052    
+        };
+
+        const krwInput = document.getElementById('krw-input');
+        const currencySelect = document.getElementById('currency-select');
+        const calcResult = document.getElementById('calc-result');
+
+        function calculateCurrency() {
+            const krwValue = parseFloat(krwInput.value);
+            const selectedCurrency = currencySelect.value;
+
+            if (isNaN(krwValue) || krwValue <= 0) {
+                calcResult.innerText = "금액을 입력하시면 환산됩니다.";
+                return;
+            }
+
+            const resultAmount = krwValue * exchangeRates[selectedCurrency];
+            
+            if (selectedCurrency === 'JPY') {
+                calcResult.innerText = `${krwValue.toLocaleString()} KRW = ₩${Math.round(resultAmount).toLocaleString()} JPY`;
+            } else {
+                calcResult.innerText = `${krwValue.toLocaleString()} KRW = $${resultAmount.toFixed(2)} ${selectedCurrency}`;
+            }
+        }
+
+        krwInput.addEventListener('input', calculateCurrency);
+        currencySelect.addEventListener('change', calculateCurrency);
+
+        // 3. Sights 명소 이미지 모달 기능
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('modal-img');
+        const closeBtn = document.querySelector('.close-btn');
+        const sightImages = document.querySelectorAll('#sights .card-img');
+
+        sightImages.forEach(img => {
+            img.addEventListener('click', function() {
+                const bgImage = window.getComputedStyle(this).backgroundImage;
+                const imageUrl = bgImage.slice(4, -1).replace(/["']/g, ""); 
+                
+                modalImg.src = imageUrl;
+                modal.classList.add('show');
+            });
+        });
+
+        closeBtn.addEventListener('click', function() {
+            modal.classList.remove('show');
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+
+        // 4. 방문자 방명록 (jQuery + Local Storage 활용)
+        $(document).ready(function() {
+            function loadReviews() {
+                const savedReviews = localStorage.getItem('itaewonReviews');
+                let reviews = savedReviews ? JSON.parse(savedReviews) : [];
+                
+                $('#reviews-list').empty(); 
+                
+                if (reviews.length === 0) {
+                    $('#reviews-list').append('<p style="text-align:center; color:#888; padding: 2rem 0;">아직 작성된 방명록이 없습니다. 첫 번째 리뷰를 남겨주세요!</p>');
+                } else {
+                    reviews.forEach(function(review) {
+                        const reviewHTML = `
+                            <div class="review-item" style="display:none;">
+                                <h4>${review.name} <span class="review-date">${review.date}</span></h4>
+                                <p>${review.message}</p>
+                            </div>
+                        `;
+                        $('#reviews-list').prepend(reviewHTML);
+                    });
+                    $('.review-item').fadeIn(600); 
+                }
+            }
+
+            loadReviews();
+
+            $('#review-form').on('submit', function(e) {
+                e.preventDefault(); 
+
+                const name = $('#reviewer-name').val();
+                const message = $('#reviewer-msg').val();
+                
+                const today = new Date();
+                const dateStr = today.getFullYear() + '-' + 
+                                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                                String(today.getDate()).padStart(2, '0');
+
+                const newReview = {
+                    name: name,
+                    message: message,
+                    date: dateStr
+                };
+
+                const savedReviews = localStorage.getItem('itaewonReviews');
+                let reviews = savedReviews ? JSON.parse(savedReviews) : [];
+                
+                reviews.push(newReview);
+                localStorage.setItem('itaewonReviews', JSON.stringify(reviews));
+
+                $('#reviewer-name').val('');
+                $('#reviewer-msg').val('');
+
+                loadReviews();
+            });
+        });
+
+        // 5. 네비게이션 메뉴 부드러운 스크롤 (jQuery)
+        $('nav a[href^="#"]').on('click', function(e) {
+            e.preventDefault(); // 기본 앵커 클릭 동작 방지
+            
+            const target = this.hash;
+            const $target = $(target);
+            
+            // 헤더 높이만큼 빼서 스크롤 위치 조정 (헤더가 내용을 가리지 않도록)
+            const headerHeight = $('header').outerHeight();
+            
+            $('html, body').animate({
+                'scrollTop': $target.offset().top - headerHeight
+            }, 800, 'swing'); // 800ms 동안 부드럽게 이동
+        });
+    </script>
 </body>
 </html>
